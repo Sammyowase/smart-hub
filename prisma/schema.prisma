@@ -1,0 +1,354 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.String
+  access_token      String? @db.String
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.String
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  name              String?
+  email             String      @unique
+  emailVerified     DateTime?
+  image             String?
+  password          String?
+  role              Role        @default(USER)
+  workspaceId       String?     @db.ObjectId
+  isTemporaryPassword Boolean   @default(false)
+  isEmailVerified   Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  // Relations
+  accounts          Account[]
+  sessions          Session[]
+  workspace         Workspace?  @relation(fields: [workspaceId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdWorkspaces Workspace[] @relation("WorkspaceCreator")
+  assignedTasks     Task[]      @relation("TaskAssignee")
+  createdTasks      Task[]      @relation("TaskCreator")
+  notes             Note[]
+  attendanceRecords Attendance[]
+  chatMessages      ChatMessage[]
+  meetingParticipants MeetingParticipant[]
+  createdMeetings   Meeting[]   @relation("MeetingCreator")
+  invitations       Invitation[]
+  notifications     Notification[]
+  createdGroups     Group[]     @relation("GroupCreator")
+  groupMemberships  GroupMember[]
+  conversationParticipants ConversationParticipant[]
+}
+
+model Workspace {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  createdById String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdBy   User         @relation("WorkspaceCreator", fields: [createdById], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users       User[]
+  tasks       Task[]
+  notes       Note[]
+  meetings    Meeting[]
+  invitations Invitation[]
+  chatMessages ChatMessage[]
+  attendanceRecords Attendance[]
+  groups      Group[]
+  conversations Conversation[]
+}
+
+model Invitation {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  email       String
+  workspaceId String           @db.ObjectId
+  invitedById String           @db.ObjectId
+  status      InvitationStatus @default(PENDING)
+  token       String           @unique
+  expiresAt   DateTime
+  createdAt   DateTime         @default(now())
+
+  // Relations
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation(fields: [invitedById], references: [id])
+
+  @@unique([email, workspaceId])
+}
+
+model Task {
+  id          String     @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  status      TaskStatus @default(TODO)
+  priority    Priority   @default(MEDIUM)
+  assigneeId  String?    @db.ObjectId
+  createdById String     @db.ObjectId
+  workspaceId String     @db.ObjectId
+  dueDate     DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // Relations
+  assignee  User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  createdBy User      @relation("TaskCreator", fields: [createdById], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id          String       @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  content     String
+  category    String?
+  isShared    Boolean      @default(false)
+  sentiment   Sentiment?
+  createdById String       @db.ObjectId
+  workspaceId String       @db.ObjectId
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  createdBy User      @relation(fields: [createdById], references: [id])
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model Attendance {
+  id          String           @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String           @db.ObjectId
+  workspaceId String           @db.ObjectId
+  type        AttendanceType
+  timestamp   DateTime         @default(now())
+  location    String?          // JSON string for location data
+  notes       String?
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+model ChatMessage {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  content     String
+  authorId    String   @db.ObjectId
+  workspaceId String   @db.ObjectId
+  groupId     String?  @db.ObjectId // Optional: for group messages
+  conversationId String? @db.ObjectId // Optional: for direct messages
+  attachments Json?    // Store file attachment metadata
+  reactions   Json?    // Store emoji reactions
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  author       User          @relation(fields: [authorId], references: [id])
+  workspace    Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  group        Group?        @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  conversation Conversation? @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model Group {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  createdById String   @db.ObjectId
+  workspaceId String   @db.ObjectId
+  isPrivate   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  createdBy User          @relation("GroupCreator", fields: [createdById], references: [id])
+  workspace Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  members   GroupMember[]
+  messages  ChatMessage[]
+
+  @@unique([name, workspaceId]) // Unique group names per workspace
+}
+
+model GroupMember {
+  id      String @id @default(auto()) @map("_id") @db.ObjectId
+  groupId String @db.ObjectId
+  userId  String @db.ObjectId
+  role    GroupRole @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  // Relations
+  group Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId]) // User can only be in a group once
+}
+
+model Conversation {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  workspaceId String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  workspace    Workspace              @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  participants ConversationParticipant[]
+  messages     ChatMessage[]
+}
+
+model ConversationParticipant {
+  id             String @id @default(auto()) @map("_id") @db.ObjectId
+  conversationId String @db.ObjectId
+  userId         String @db.ObjectId
+  joinedAt       DateTime @default(now())
+
+  // Relations
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId]) // User can only be in a conversation once
+}
+
+model Meeting {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  title        String
+  description  String?
+  startTime    DateTime
+  endTime      DateTime
+  createdById  String   @db.ObjectId
+  workspaceId  String   @db.ObjectId
+  summary      String?
+  createdAt    DateTime @default(now())
+
+  // Relations
+  createdBy    User      @relation("MeetingCreator", fields: [createdById], references: [id])
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  participants MeetingParticipant[]
+}
+
+model MeetingParticipant {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  meetingId String @db.ObjectId
+  userId    String @db.ObjectId
+
+  // Relations
+  meeting Meeting @relation(fields: [meetingId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([meetingId, userId])
+}
+
+model Notification {
+  id        String           @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  message   String
+  type      NotificationType @default(INFO)
+  actionUrl String?
+  isRead    Boolean          @default(false)
+  userId    String           @db.ObjectId
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model OTPVerification {
+  id        String      @id @default(auto()) @map("_id") @db.ObjectId
+  email     String
+  otpHash   String      // Hashed OTP for security
+  type      OTPType     @default(EMAIL_VERIFICATION)
+  expiresAt DateTime
+  attempts  Int         @default(0)
+  isUsed    Boolean     @default(false)
+  createdAt DateTime    @default(now())
+
+  @@index([email, type])
+}
+
+// Enums
+enum Role {
+  ADMIN
+  USER
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum Sentiment {
+  POSITIVE
+  NEUTRAL
+  NEGATIVE
+}
+
+enum AttendanceType {
+  CLOCK_IN
+  CLOCK_OUT
+}
+
+enum NotificationType {
+  INFO
+  SUCCESS
+  WARNING
+  ERROR
+  TASK_ASSIGNED
+  MEETING_REMINDER
+  INVITATION
+}
+
+enum GroupRole {
+  ADMIN
+  MODERATOR
+  MEMBER
+}
+
+enum OTPType {
+  EMAIL_VERIFICATION
+  PASSWORD_CHANGE
+  ACCOUNT_RECOVERY
+}
+
+

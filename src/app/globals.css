@@ -24,3 +24,107 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Theme Classes */
+.light {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+.light body {
+  background: #f9fafb;
+  color: #111827;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+.dark body {
+  background: #111827;
+  color: #f9fafb;
+}
+
+/* Light theme overrides */
+/* Background colors */
+.light .bg-gray-900 { background-color: #f9fafb !important; }
+.light .bg-gray-800 { background-color: #ffffff !important; }
+.light .bg-gray-800\/50 { background-color: rgba(255, 255, 255, 0.8) !important; }
+.light .bg-gray-700 { background-color: #f3f4f6 !important; }
+.light .bg-gray-600 { background-color: #e5e7eb !important; }
+.light .bg-gray-500 { background-color: #d1d5db !important; }
+
+/* Text colors */
+.light .text-white { color: #111827 !important; }
+.light .text-gray-300 { color: #374151 !important; }
+.light .text-gray-400 { color: #6b7280 !important; }
+.light .text-gray-500 { color: #9ca3af !important; }
+
+/* Border colors */
+.light .border-gray-700 { border-color: #d1d5db !important; }
+.light .border-gray-600 { border-color: #e5e7eb !important; }
+
+/* Hover states */
+.light .hover\:bg-gray-700:hover { background-color: #f3f4f6 !important; }
+.light .hover\:bg-gray-800:hover { background-color: #f9fafb !important; }
+.light .hover\:text-white:hover { color: #111827 !important; }
+
+/* Gradient backgrounds */
+.light .bg-gradient-to-r { background: linear-gradient(to right, rgba(20, 184, 166, 0.1), rgba(168, 85, 247, 0.1)) !important; }
+.light .bg-gradient-to-br { background: linear-gradient(to bottom right, rgba(251, 191, 36, 0.1), rgba(251, 146, 60, 0.1)) !important; }
+
+/* Specific component overrides */
+.light .bg-gray-900\/50 { background-color: rgba(249, 250, 251, 0.8) !important; }
+.light .bg-gray-800\/70 { background-color: rgba(255, 255, 255, 0.9) !important; }
+
+/* Scrollbar for light theme */
+.light .scrollbar-custom {
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.light .scrollbar-custom::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
+
+.light .scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.light .scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Custom scrollbar styles */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* Internet Explorer 10+ */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Safari and Chrome */
+}
+
+/* Custom scrollbar for elements that should show scrollbars */
+.scrollbar-custom {
+  scrollbar-width: thin;
+  scrollbar-color: #374151 #1f2937;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: #1f2937;
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background: #374151;
+  border-radius: 3px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb:hover {
+  background: #4b5563;
+}
