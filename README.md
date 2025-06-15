@@ -15,6 +15,7 @@
 - **📅 Meeting Scheduler** - Schedule meetings with AI-generated summaries
 - **⏰ Attendance Tracking** - Location-based clock-in/out with analytics
 
+
 ### AI-Powered Features (Gemini Integration)
 - **🤖 AI Assistant** - Chat-based help with @ai mentions
 - **📊 Note Summarization** - Automatic content summarization
