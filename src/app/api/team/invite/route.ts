@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
-import bcrypt from "bcryptjs"
 import { prisma } from "@/lib/prisma"
 import { authOptions } from "@/lib/auth"
-import { generateRandomPassword, generateInvitationToken } from "@/lib/utils"
+import { generateInvitationToken } from "@/lib/utils"
 import { sendEnhancedInvitationEmail, verifyEmailService } from "@/lib/email"
 
 export async function POST(request: NextRequest) {
@@ -25,7 +24,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { emails, role = "USER", message } = body
+    const { emails } = body
 
     if (!emails || !Array.isArray(emails) || emails.length === 0) {
       return NextResponse.json(
@@ -143,7 +142,7 @@ export async function POST(request: NextRequest) {
           emailError
         })
 
-      } catch (error) {
+      } catch (error: unknown) {
         console.error(`Error inviting ${email}:`, error)
         errors.push(`Failed to invite ${email}`)
       }

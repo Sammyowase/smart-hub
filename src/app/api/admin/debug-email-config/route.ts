@@ -3,7 +3,12 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import nodemailer from 'nodemailer'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
+  // Skip during build time
+  if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
+    return NextResponse.json({ error: 'Not available during build' }, { status: 503 });
+  }
+
   try {
     const session = await getServerSession(authOptions)
 
@@ -19,7 +24,7 @@ export async function GET(request: NextRequest) {
     const debug = {
       timestamp: new Date().toISOString(),
       title: "🔍 DETAILED EMAIL CONFIGURATION DEBUG",
-      
+
       environmentVariables: {
         EMAIL_SERVER_HOST: {
           value: process.env.EMAIL_SERVER_HOST || 'NOT SET',
@@ -51,9 +56,10 @@ export async function GET(request: NextRequest) {
         }
       },
 
-      configurationIssues: [],
-      smtpTest: null,
-      recommendations: []
+      configurationIssues: [] as string[],
+      smtpTest: null as any,
+      recommendations: [] as string[],
+      status: "" as string
     };
 
     // Analyze configuration issues
@@ -85,8 +91,8 @@ export async function GET(request: NextRequest) {
     if (debug.configurationIssues.length === 0) {
       try {
         console.log('Testing SMTP connection...');
-        
-        const transporter = nodemailer.createTransporter({
+
+        const transporter = nodemailer.createTransport({
           host: process.env.EMAIL_SERVER_HOST,
           port: parseInt(process.env.EMAIL_SERVER_PORT || '587'),
           secure: process.env.EMAIL_SERVER_PORT === '465',
@@ -100,7 +106,7 @@ export async function GET(request: NextRequest) {
         });
 
         const verified = await transporter.verify();
-        
+
         debug.smtpTest = {
           success: verified,
           message: verified ? 'SMTP connection successful' : 'SMTP connection failed',
@@ -138,10 +144,10 @@ export async function GET(request: NextRequest) {
     // Overall status
     const hasIssues = debug.configurationIssues.length > 0;
     const smtpWorks = debug.smtpTest?.success === true;
-    
-    debug.status = hasIssues 
-      ? "❌ CONFIGURATION ISSUES DETECTED" 
-      : smtpWorks 
+
+    debug.status = hasIssues
+      ? "❌ CONFIGURATION ISSUES DETECTED"
+      : smtpWorks
       ? "✅ EMAIL CONFIGURATION WORKING"
       : "⚠️ CONFIGURATION LOOKS GOOD BUT SMTP TEST FAILED";
 

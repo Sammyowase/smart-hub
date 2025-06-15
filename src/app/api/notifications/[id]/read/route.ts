@@ -5,7 +5,7 @@ import { authOptions } from "@/lib/auth"
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = Date.now();
 
@@ -19,7 +19,8 @@ export async function PUT(
       )
     }
 
-    const notificationId = params.id;
+    const resolvedParams = await params
+    const notificationId = resolvedParams.id;
 
     if (!notificationId) {
       return NextResponse.json(

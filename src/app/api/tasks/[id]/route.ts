@@ -87,10 +87,11 @@ async function updateTask(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    return await updateTask(request, params)
+    const resolvedParams = await params
+    return await updateTask(request, resolvedParams)
   } catch (error) {
     console.error("PUT task error:", error)
     return NextResponse.json(
@@ -102,10 +103,11 @@ export async function PUT(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    return await updateTask(request, params)
+    const resolvedParams = await params
+    return await updateTask(request, resolvedParams)
   } catch (error) {
     console.error("PATCH task error:", error)
     return NextResponse.json(
@@ -117,7 +119,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -129,10 +131,12 @@ export async function DELETE(
       )
     }
 
+    const resolvedParams = await params
+
     // Verify task belongs to user's workspace
     const existingTask = await prisma.task.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         workspaceId: session.user.workspaceId
       }
     })
@@ -145,7 +149,7 @@ export async function DELETE(
     }
 
     await prisma.task.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
     return NextResponse.json({ message: "Task deleted successfully" })

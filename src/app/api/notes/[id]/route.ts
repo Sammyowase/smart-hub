@@ -5,11 +5,11 @@ import { authOptions } from "@/lib/auth"
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id || !session?.user?.workspaceId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -20,10 +20,12 @@ export async function PUT(
     const body = await request.json()
     const { title, content, category, isShared } = body
 
+    const resolvedParams = await params
+
     // Verify note belongs to user's workspace
     const existingNote = await prisma.note.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         workspaceId: session.user.workspaceId
       }
     })
@@ -39,7 +41,7 @@ export async function PUT(
     const sentiment = content ? analyzeSentiment(content) : existingNote.sentiment
 
     const updatedNote = await prisma.note.update({
-      where: { id: params.id },
+      where: { id: resolvedParams.id },
       data: {
         ...(title !== undefined && { title }),
         ...(content !== undefined && { content, sentiment }),
@@ -70,11 +72,11 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id || !session?.user?.workspaceId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -82,10 +84,12 @@ export async function DELETE(
       )
     }
 
+    const resolvedParams = await params
+
     // Verify note belongs to user's workspace
     const existingNote = await prisma.note.findFirst({
       where: {
-        id: params.id,
+        id: resolvedParams.id,
         workspaceId: session.user.workspaceId
       }
     })
@@ -98,7 +102,7 @@ export async function DELETE(
     }
 
     await prisma.note.delete({
-      where: { id: params.id }
+      where: { id: resolvedParams.id }
     })
 
     return NextResponse.json({ message: "Note deleted successfully" })
@@ -116,16 +120,16 @@ export async function DELETE(
 function analyzeSentiment(content: string): "POSITIVE" | "NEUTRAL" | "NEGATIVE" {
   const positiveWords = ['good', 'great', 'excellent', 'amazing', 'wonderful', 'fantastic', 'awesome', 'love', 'happy', 'success', 'achieve', 'win', 'progress']
   const negativeWords = ['bad', 'terrible', 'awful', 'hate', 'sad', 'angry', 'fail', 'problem', 'issue', 'difficult', 'hard', 'struggle', 'worry']
-  
+
   const words = content.toLowerCase().split(/\s+/)
   let positiveCount = 0
   let negativeCount = 0
-  
+
   words.forEach(word => {
     if (positiveWords.some(pw => word.includes(pw))) positiveCount++
     if (negativeWords.some(nw => word.includes(nw))) negativeCount++
   })
-  
+
   if (positiveCount > negativeCount) return "POSITIVE"
   if (negativeCount > positiveCount) return "NEGATIVE"
   return "NEUTRAL"

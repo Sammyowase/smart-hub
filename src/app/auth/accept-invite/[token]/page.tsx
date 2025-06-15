@@ -15,7 +15,7 @@ interface InvitationData {
   isExpired: boolean;
 }
 
-export default function AcceptInvitePage({ params }: { params: { token: string } }) {
+export default function AcceptInvitePage({ params }: { params: Promise<{ token: string }> }) {
   const router = useRouter();
   const [invitation, setInvitation] = useState<InvitationData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,7 +32,8 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
   useEffect(() => {
     const fetchInvitation = async () => {
       try {
-        const response = await fetch(`/api/auth/invitation/${params.token}`);
+        const resolvedParams = await params;
+        const response = await fetch(`/api/auth/invitation/${resolvedParams.token}`);
         const data = await response.json();
 
         if (!response.ok) {
@@ -48,14 +49,12 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
       }
     };
 
-    if (params.token) {
-      fetchInvitation();
-    }
-  }, [params.token]);
+    fetchInvitation();
+  }, [params]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!invitation) return;
 
     // Validation
@@ -79,11 +78,12 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
 
     try {
       // Accept invitation and create account
+      const resolvedParams = await params;
       const response = await fetch(`/api/auth/accept-invitation`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          token: params.token,
+          token: resolvedParams.token,
           name: formData.name.trim(),
           password: formData.password
         })
@@ -289,7 +289,7 @@ export default function AcceptInvitePage({ params }: { params: { token: string }
         {/* Footer */}
         <div className="text-center mt-6 pt-6 border-t border-gray-700">
           <p className="text-xs text-gray-500">
-            By accepting this invitation, you agree to SmartHub's Terms of Service and Privacy Policy.
+            By accepting this invitation, you agree to SmartHub&apos;s Terms of Service and Privacy Policy.
           </p>
         </div>
       </div>

@@ -5,11 +5,11 @@ import { authOptions } from "@/lib/auth"
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id || !session?.user?.workspaceId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -25,7 +25,8 @@ export async function POST(
       )
     }
 
-    const groupId = params.id
+    const resolvedParams = await params
+    const groupId = resolvedParams.id
     const body = await request.json()
     const { userIds, role = "MEMBER" } = body
 
@@ -138,11 +139,11 @@ export async function POST(
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id || !session?.user?.workspaceId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -150,7 +151,8 @@ export async function GET(
       )
     }
 
-    const groupId = params.id
+    const resolvedParams = await params
+    const groupId = resolvedParams.id
 
     // Verify group exists and user has access
     const group = await prisma.group.findFirst({

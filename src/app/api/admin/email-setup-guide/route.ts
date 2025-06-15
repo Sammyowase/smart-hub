@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const setupGuide = {
       timestamp: new Date().toISOString(),
       title: "📧 SmartHub Email Configuration Guide",
-      
+
       overview: {
         purpose: "Configure SMTP email service for SmartHub invitation system",
         requirements: [

@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const quickSetup = {
       timestamp: new Date().toISOString(),
       title: "⚡ Quick Email Setup for SmartHub",
-      
+
       currentIssue: {
         problem: "Emails not being sent or showing 'localhost says...' messages",
         cause: "Email service not properly configured or using localhost SMTP",
@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
           },
           recommendation: "Use Gmail for quick setup and testing"
         },
-        
+
         step2: {
           title: "2. Get Email Credentials",
           gmail: {

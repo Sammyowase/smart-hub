@@ -5,11 +5,11 @@ import { authOptions } from "@/lib/auth"
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id || !session?.user?.workspaceId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -25,8 +25,9 @@ export async function DELETE(
       )
     }
 
-    const groupId = params.id
-    const userIdToRemove = params.userId
+    const resolvedParams = await params
+    const groupId = resolvedParams.id
+    const userIdToRemove = resolvedParams.userId
 
     // Verify group exists and belongs to workspace
     const group = await prisma.group.findFirst({
@@ -118,11 +119,11 @@ export async function DELETE(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; userId: string } }
+  { params }: { params: Promise<{ id: string; userId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
-    
+
     if (!session?.user?.id || !session?.user?.workspaceId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -138,8 +139,9 @@ export async function PUT(
       )
     }
 
-    const groupId = params.id
-    const userIdToUpdate = params.userId
+    const resolvedParams = await params
+    const groupId = resolvedParams.id
+    const userIdToUpdate = resolvedParams.userId
     const body = await request.json()
     const { role } = body
 

@@ -343,7 +343,7 @@ export default function AICommandsPage() {
             <div className="space-y-8">
               <div className="text-center">
                 <p className="text-gray-300 mb-6 text-lg">
-                  Once you sign in to SmartHub, you'll have access to powerful AI commands that integrate
+                  Once you sign in to SmartHub, you&apos;ll have access to powerful AI commands that integrate
                   with your workspace data to provide personalized insights and assistance.
                 </p>
               </div>
@@ -413,7 +413,7 @@ export default function AICommandsPage() {
             <>
               <h2 className="text-3xl font-bold text-white mb-4">Ready to unlock AI-powered productivity?</h2>
               <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-                Join thousands of teams using SmartHub's AI assistant to streamline their workflow,
+                Join thousands of teams using SmartHub&apos;s AI assistant to streamline their workflow,
                 manage tasks efficiently, and boost productivity with intelligent automation.
               </p>
 

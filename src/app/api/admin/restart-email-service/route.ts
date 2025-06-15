@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { recreateEmailTransporter, verifyEmailService } from "@/lib/email"
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
     const result = {
       timestamp: new Date().toISOString(),
       title: "🔄 EMAIL SERVICE RESTART",
-      
+
       steps: {
         step1_recreate_transporter: null,
         step2_verify_service: null,
         step3_test_connection: null
       },
-      
+
       status: "processing",
       recommendations: []
     };
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const recreateResult = recreateEmailTransporter();
     result.steps.step1_recreate_transporter = {
       success: recreateResult.success,
-      message: recreateResult.success 
+      message: recreateResult.success
         ? "Email transporter recreated with current environment variables"
         : `Failed to recreate transporter: ${recreateResult.error}`,
       error: recreateResult.error
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     const verifyResult = await verifyEmailService();
     result.steps.step2_verify_service = {
       success: verifyResult.success,
-      message: verifyResult.success 
+      message: verifyResult.success
         ? "Email service verification successful"
         : `Verification failed: ${verifyResult.error}`,
       error: verifyResult.error,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       result.status = "❌ FAILED AT STEP 2";
       result.recommendations.push("Email service verification failed");
       result.recommendations.push(`Error: ${verifyResult.error}`);
-      
+
       if (verifyResult.error?.includes('localhost')) {
         result.recommendations.push("Set EMAIL_SERVER_HOST to smtp.gmail.com (not localhost)");
       }
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         result.recommendations.push("Check EMAIL_SERVER_USER and EMAIL_SERVER_PASSWORD");
         result.recommendations.push("For Gmail, use app password (16 characters without spaces)");
       }
-      
+
       return NextResponse.json(result, { status: 500 });
     }
 

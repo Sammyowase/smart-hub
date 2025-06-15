@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { verifyEmailService, sendTestEmail } from "@/lib/email"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const testResults = {
       timestamp: new Date().toISOString(),
       status: "📧 EMAIL SERVICE DIAGNOSTIC",
-      
+
       environmentVariables: {
         EMAIL_SERVER_HOST: process.env.EMAIL_SERVER_HOST || 'not set',
         EMAIL_SERVER_PORT: process.env.EMAIL_SERVER_PORT || 'not set',
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     if (!verificationResult.success) {
       testResults.recommendations.push("Fix email service configuration before sending invitations");
       testResults.recommendations.push(`Error: ${verificationResult.error}`);
-      
+
       if (verificationResult.details?.missingVars) {
         testResults.recommendations.push(`Set missing environment variables: ${verificationResult.details.missingVars.join(', ')}`);
       }
@@ -78,9 +78,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Overall status
-    testResults.status = verificationResult.success && 
-                        (testResults.testEmailResult?.success !== false) 
-                        ? "✅ EMAIL SERVICE WORKING" 
+    testResults.status = verificationResult.success &&
+                        (testResults.testEmailResult?.success !== false)
+                        ? "✅ EMAIL SERVICE WORKING"
                         : "❌ EMAIL SERVICE ISSUES DETECTED";
 
     return NextResponse.json(testResults);

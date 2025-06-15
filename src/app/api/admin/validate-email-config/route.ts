@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await getServerSession(authOptions)
 
@@ -18,23 +18,23 @@ export async function GET(request: NextRequest) {
     const validation = {
       timestamp: new Date().toISOString(),
       status: "🔧 EMAIL CONFIGURATION VALIDATION",
-      
+
       environmentVariables: {
         EMAIL_SERVER_HOST: {
           value: process.env.EMAIL_SERVER_HOST || 'not set',
           isSet: !!process.env.EMAIL_SERVER_HOST,
           isValid: !!(process.env.EMAIL_SERVER_HOST && !process.env.EMAIL_SERVER_HOST.includes('localhost')),
-          recommendation: process.env.EMAIL_SERVER_HOST?.includes('localhost') 
+          recommendation: process.env.EMAIL_SERVER_HOST?.includes('localhost')
             ? 'Change from localhost to a real SMTP server (e.g., smtp.gmail.com)'
-            : process.env.EMAIL_SERVER_HOST 
-            ? 'OK' 
+            : process.env.EMAIL_SERVER_HOST
+            ? 'OK'
             : 'Set to smtp.gmail.com for Gmail or smtp-mail.outlook.com for Outlook'
         },
         EMAIL_SERVER_PORT: {
           value: process.env.EMAIL_SERVER_PORT || 'not set',
           isSet: !!process.env.EMAIL_SERVER_PORT,
           isValid: ['587', '465', '25'].includes(process.env.EMAIL_SERVER_PORT || ''),
-          recommendation: process.env.EMAIL_SERVER_PORT 
+          recommendation: process.env.EMAIL_SERVER_PORT
             ? (['587', '465', '25'].includes(process.env.EMAIL_SERVER_PORT) ? 'OK' : 'Use 587 for TLS or 465 for SSL')
             : 'Set to 587 for TLS (recommended) or 465 for SSL'
         },
@@ -42,17 +42,17 @@ export async function GET(request: NextRequest) {
           value: process.env.EMAIL_SERVER_USER ? '***configured***' : 'not set',
           isSet: !!process.env.EMAIL_SERVER_USER,
           isValid: !!(process.env.EMAIL_SERVER_USER && process.env.EMAIL_SERVER_USER.includes('@')),
-          recommendation: process.env.EMAIL_SERVER_USER?.includes('@') 
-            ? 'OK' 
+          recommendation: process.env.EMAIL_SERVER_USER?.includes('@')
+            ? 'OK'
             : 'Set to your full email address (e.g., your-email@gmail.com)'
         },
         EMAIL_SERVER_PASSWORD: {
           value: process.env.EMAIL_SERVER_PASSWORD ? '***configured***' : 'not set',
           isSet: !!process.env.EMAIL_SERVER_PASSWORD,
           isValid: !!(process.env.EMAIL_SERVER_PASSWORD && process.env.EMAIL_SERVER_PASSWORD.length >= 8),
-          recommendation: process.env.EMAIL_SERVER_PASSWORD 
-            ? (process.env.EMAIL_SERVER_PASSWORD.length >= 16 
-              ? 'OK (appears to be app password)' 
+          recommendation: process.env.EMAIL_SERVER_PASSWORD
+            ? (process.env.EMAIL_SERVER_PASSWORD.length >= 16
+              ? 'OK (appears to be app password)'
               : 'For Gmail, use 16-character app password instead of regular password')
             : 'Set to your email password or app password'
         },
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       validation.recommendations.push('Change EMAIL_SERVER_HOST to a real SMTP server');
     }
 
-    if (process.env.EMAIL_SERVER_PASSWORD && process.env.EMAIL_SERVER_PASSWORD.length < 16 && 
+    if (process.env.EMAIL_SERVER_PASSWORD && process.env.EMAIL_SERVER_PASSWORD.length < 16 &&
         process.env.EMAIL_SERVER_HOST?.includes('gmail')) {
       validation.configurationIssues.push('Gmail requires app password, not regular password');
       validation.recommendations.push('Generate 16-character app password in Google Account settings');
@@ -111,8 +111,8 @@ export async function GET(request: NextRequest) {
     }
 
     // Overall status
-    validation.status = validation.configurationIssues.length === 0 
-      ? "✅ EMAIL CONFIGURATION VALID" 
+    validation.status = validation.configurationIssues.length === 0
+      ? "✅ EMAIL CONFIGURATION VALID"
       : "❌ EMAIL CONFIGURATION ISSUES DETECTED";
 
     return NextResponse.json(validation);

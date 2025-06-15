@@ -5,7 +5,7 @@ import { prisma } from "@/lib/prisma"
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  { params }: { params: Promise<{ workspaceId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions)
@@ -17,7 +17,8 @@ export async function GET(
       )
     }
 
-    const { workspaceId } = params
+    const resolvedParams = await params
+    const { workspaceId } = resolvedParams
 
     // Verify user has access to this workspace
     if (session.user.workspaceId !== workspaceId) {
@@ -55,7 +56,7 @@ export async function GET(
 
   } catch (error) {
     console.error("Workspace users fetch error:", error)
-    
+
     // Return fallback data if database query fails
     return NextResponse.json({
       success: true,

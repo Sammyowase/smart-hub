@@ -70,7 +70,7 @@ export default function ChangePasswordPage() {
       }
 
       // Sign out and redirect to login
-      await signOut({ callbackUrl: "/login?message=Password changed successfully" });
+      await signOut({ callbackUrl: "/auth/signin?message=Password changed successfully" });
     } catch (error: any) {
       setError(error.message || "An error occurred. Please try again.");
     } finally {
@@ -104,7 +104,7 @@ export default function ChangePasswordPage() {
             <Shield className="w-5 h-5 text-yellow-400" />
             <h2 className="text-lg font-semibold text-white">Password Change Required</h2>
           </div>
-          
+
           <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-lg p-3 mb-6">
             <p className="text-yellow-400 text-sm">
               You're using a temporary password. Please create a new secure password to continue.

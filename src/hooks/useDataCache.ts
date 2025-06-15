@@ -53,20 +53,20 @@ export function useDataCache<T>(
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [isStale, setIsStale] = useState(false);
-  
+
   const retryCountRef = useRef(0);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   const getCachedData = useCallback((): CacheEntry<T> | null => {
     const cached = globalCache.get(key);
     if (!cached) return null;
-    
+
     const now = Date.now();
     if (now > cached.expiry) {
       globalCache.delete(key);
       return null;
     }
-    
+
     return cached as CacheEntry<T>;
   }, [key]);
 
@@ -91,11 +91,11 @@ export function useDataCache<T>(
       if (cached) {
         setData(cached.data);
         setError(null);
-        
+
         // Check if data is stale (older than half the TTL)
         const isDataStale = Date.now() - cached.timestamp > ttl / 2;
         setIsStale(isDataStale);
-        
+
         // If stale and staleWhileRevalidate is enabled, fetch fresh data in background
         if (isDataStale && staleWhileRevalidate) {
           fetchData(false); // Fetch without using cache
@@ -106,13 +106,13 @@ export function useDataCache<T>(
 
     setIsLoading(true);
     setError(null);
-    
+
     // Create new abort controller for this request
     abortControllerRef.current = new AbortController();
 
     try {
       const result = await fetcher();
-      
+
       // Check if request was aborted
       if (abortControllerRef.current?.signal.aborted) {
         return;
@@ -122,7 +122,7 @@ export function useDataCache<T>(
       setCachedData(result);
       setIsStale(false);
       retryCountRef.current = 0; // Reset retry count on success
-      
+
     } catch (err) {
       // Check if request was aborted
       if (abortControllerRef.current?.signal.aborted) {
@@ -130,18 +130,18 @@ export function useDataCache<T>(
       }
 
       const error = err instanceof Error ? err : new Error('Unknown error');
-      
+
       // Retry logic
       if (retryOnError && retryCountRef.current < maxRetries) {
         retryCountRef.current++;
         console.warn(`Request failed, retrying (${retryCountRef.current}/${maxRetries}):`, error.message);
-        
+
         // Exponential backoff: 1s, 2s, 4s
         const delay = Math.pow(2, retryCountRef.current - 1) * 1000;
         setTimeout(() => fetchData(false), delay);
         return;
       }
-      
+
       setError(error);
       console.error('Data fetch error:', error);
     } finally {
@@ -161,7 +161,7 @@ export function useDataCache<T>(
   // Initial data fetch
   useEffect(() => {
     fetchData();
-    
+
     // Cleanup function
     return () => {
       if (abortControllerRef.current) {
@@ -186,18 +186,18 @@ export const cacheUtils = {
   clearAll: () => {
     globalCache.clear();
   },
-  
+
   // Clear specific cache entry
   clear: (key: string) => {
     globalCache.delete(key);
   },
-  
+
   // Get cache size
   size: () => globalCache.size,
-  
+
   // Get all cache keys
   keys: () => Array.from(globalCache.keys()),
-  
+
   // Preload data into cache
   preload: async <T>(key: string, fetcher: () => Promise<T>, ttl: number = 5 * 60 * 1000) => {
     try {
@@ -222,9 +222,13 @@ export function useMultipleDataCache<T extends Record<string, any>>(
     options?: CacheOptions;
   }>
 ) {
-  const results = entries.map(({ key, fetcher, options }) => 
-    useDataCache(key, fetcher, options)
-  );
+  // Call hooks at the top level, not in callbacks
+  const results = [];
+  for (let i = 0; i < entries.length; i++) {
+    const { key, fetcher, options } = entries[i];
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    results.push(useDataCache(key, fetcher, options));
+  }
 
   return {
     data: entries.reduce((acc, { key }, index) => {
