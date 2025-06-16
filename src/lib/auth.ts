@@ -41,10 +41,12 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Check email verification status
-        // Only treat explicitly false as unverified (null/undefined = legacy user, treat as verified)
-        const emailVerificationStatus = user.isEmailVerified === false ? false : true;
+        // Check both emailVerified (DateTime) and isEmailVerified (Boolean) fields
+        const hasEmailVerified = !!user.emailVerified;
+        const isEmailVerifiedFlag = user.isEmailVerified;
+        const emailVerificationStatus = hasEmailVerified || isEmailVerifiedFlag;
 
-        console.log(`User ${user.email} login - isEmailVerified: ${user.isEmailVerified}, treating as: ${emailVerificationStatus}`);
+        console.log(`User ${user.email} login - emailVerified: ${!!user.emailVerified}, isEmailVerified: ${user.isEmailVerified}, treating as: ${emailVerificationStatus}`);
 
         return {
           id: user.id,
